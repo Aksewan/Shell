@@ -32,16 +32,33 @@ void execution_commande(struct cmdline *l) {
 			}
 			else if (pid1 == 0) { //On veut passer dans la boucle suivante
 				Close(pipefd[1]);
-				Dup2(buffer, 0);
 				read(pipefd[0], buffer, strlen(buffer) +1);
+				i++;
 			}
-            else{ //On doit executer la commande de seq[0] et ecrire sa sortie vers le pipe
+			else{ //On doit executer la commande de seq[i] et ecrire sa sortie vers le pipe
 				Close(pipefd[0]);
-				Dup2(buffer,1);
-				if(execvp(l->seq[i][0], l->seq[i]) < 0){	
-					fprintf(stderr, "%s: command not found\n", l->seq[i][0]);
+				if (l->in) {
+					int fd_in = open(l->in, O_RDONLY);
+					if (fd_in == -1) {
+						fprintf(stderr, "%s: Permission denied\n", l->in);
+						exit(EXIT_FAILURE);
+					}
+					dup2(fd_in, STDIN_FILENO); //redirige l'entrée standard vers le fichier
+					close(fd_in);
+				}
+				if (l->out) {
+					int fd_out = open(l->out, O_WRONLY | O_TRUNC | O_CREAT); 
+					if (fd_out == -1) {
+						fprintf(stderr, "%s: Permission denied\n", l->out);
+						exit(EXIT_FAILURE);
+					}
+					dup2(fd_out, STDOUT_FILENO); //redirige la sortie standard vers le fichier
+					close(fd_out);
+				}
+				if (execvp(l->seq[i][0], l->seq[i]) < 0) { //execvp(cmd principale, liste des args)
+					fprintf(stderr, "%s: command not found\n", l->seq[i][0]); //ou mettre le truc en entier?
 					exit(EXIT_FAILURE);
-				}	
+				}
 				write(pipefd[1], buffer, strlen(buffer) +1);
 				pid_t w = waitpid(pid1, &status, 0); //On attend que l'enfant ait fini pour continuer
 				if(w == -1){
@@ -50,67 +67,41 @@ void execution_commande(struct cmdline *l) {
 				}
 				exit(0);
 			}
-        }
+		}
+		//Derniere commande à effectuer
 		if (l->in) {
 			int fd_in = open(l->in, O_RDONLY);
 			if (fd_in == -1) {
 				fprintf(stderr, "%s: Permission denied\n", l->in);
 				exit(EXIT_FAILURE);
-				}
-				dup2(fd_in, STDIN_FILENO); //redirige l'entrée standard vers le fichier
-				close(fd_in);
 			}
-			if (l->out) {
-				int fd_out = open(l->out, O_WRONLY | O_TRUNC | O_CREAT); 
-				if (fd_out == -1) {
-					fprintf(stderr, "%s: Permission denied\n", l->out);
-					exit(EXIT_FAILURE);
-				}
-				dup2(fd_out, STDOUT_FILENO); //redirige la sortie standard vers le fichier
-				close(fd_out);
-			}
-
-			if (execvp(l->seq[0][0], l->seq[0]) < 0) { //execvp(cmd principale, liste des args)
-				fprintf(stderr, "%s: command not found\n", l->seq[0][0]); //ou mettre le truc en entier?
-				exit(EXIT_FAILURE);
-				}
-			} 
+			dup2(fd_in, STDIN_FILENO); //redirige l'entrée standard vers le fichier
+			close(fd_in);
 		}
-		else { //Pere
-			pid_t w = waitpid(pid, &status, 0); //On attend que l'enfant ait fini pour continuer
-			if(w == -1){
-				perror("waitpid");
+		if (l->out) {
+			int fd_out = open(l->out, O_WRONLY | O_TRUNC | O_CREAT); 
+			if (fd_out == -1) {
+				fprintf(stderr, "%s: Permission denied\n", l->out);
 				exit(EXIT_FAILURE);
 			}
+			dup2(fd_out, STDOUT_FILENO); //redirige la sortie standard vers le fichier
+			close(fd_out);
 		}
-	}
-	else { //on a un tube
-		        pid_t pid2 = Fork();
-		if (pid2 == -1) {
-            perror("fork");
-            exit(EXIT_FAILURE);
-        } 
-        else if (pid2 == 0) { //processus de la deuxieme commande
-            //faire du bordel
-            if (execvp(l->seq[1][0], l->seq[1]) < 0) {
-                fprintf(stderr, "%s: command not found\n", l->seq[1][0]);
-                exit(EXIT_FAILURE);
-            }
-        }
-
-		//attendre que les 2 processus enfant aient fini...que faire si plus que 2? Boucle?
-		int status1, status2;
-		if (waitpid(pid1, &status1, 0) < 0) {
-			perror("waitpid");
+		if (execvp(l->seq[i][0], l->seq[i]) < 0) { //execvp(cmd principale, liste des args)
+			fprintf(stderr, "%s: command not found\n", l->seq[i][0]); //ou mettre le truc en entier?
 			exit(EXIT_FAILURE);
 		}
-		if (waitpid(pid2, &status2, 0) < 0) {
+		exit(0);
+
+	}
+	else { //Pere
+		pid_t w = waitpid(pid, &status, 0); //On attend que l'enfant ait fini pour continuer
+		if(w == -1){
 			perror("waitpid");
 			exit(EXIT_FAILURE);
 		}
 	}
 }
-
 int main()
 {
 	while (1) {
@@ -155,6 +146,6 @@ int main()
 			}
 			printf("\n");
 		}
-		
+
 	}
 }
