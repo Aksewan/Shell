@@ -32,11 +32,13 @@ void execution_commande(struct cmdline *l) {
 			}
 			else if (pid1 == 0) { //On veut passer dans la boucle suivante
 				Close(pipefd[1]);
+				Dup2(pipefd[0], 0);
 				read(pipefd[0], buffer, strlen(buffer) +1);
 				i++;
 			}
 			else{ //On doit executer la commande de seq[i] et ecrire sa sortie vers le pipe
 				Close(pipefd[0]);
+				Dup2(pipefd[1],1);
 				if (l->in) {
 					int fd_in = open(l->in, O_RDONLY);
 					if (fd_in == -1) {
@@ -92,7 +94,6 @@ void execution_commande(struct cmdline *l) {
 			exit(EXIT_FAILURE);
 		}
 		exit(0);
-
 	}
 	else { //Pere
 		pid_t w = waitpid(pid, &status, 0); //On attend que l'enfant ait fini pour continuer
@@ -102,6 +103,7 @@ void execution_commande(struct cmdline *l) {
 		}
 	}
 }
+
 int main()
 {
 	while (1) {
