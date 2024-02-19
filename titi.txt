@@ -1,0 +1,11 @@
+024-02-16 10:05:25 - Erreur lors du traitement de la requête.
+2024-02-16 10:10:15 - Une autre erreur s'est produite.
+2024-02-16 10:15:32 - Une erreur critique est survenue.
+2024-02-16 10:20:45 - La connexion à la base de données a échoué.
+2024-02-16 10:25:18 - Erreur lors de la lecture du fichier de configuration.
+2024-02-16 10:30:50 - Erreur de syntaxe dans la requête SQL.
+2024-02-16 10:35:12 - Une erreur inattendue est survenue.
+2024-02-16 10:40:28 - Une erreur de type "404 Not Found" a été retournée.
+2024-02-16 10:45:59 - Erreur lors de l'envoi du formulaire.
+2024-02-16 10:50:37 - L'accès au fichier demandé a été refusé.
+2024-02-16 10:55:20 - Erreur interne du serveur.
