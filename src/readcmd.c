@@ -161,7 +161,6 @@ struct cmdline *readcmd(void)
 	char **cmd;
 	char ***seq;
 	size_t cmd_len, seq_len;
-	int background;
 
 	line = readline();
 	if (line == NULL) {
