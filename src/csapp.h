@@ -69,6 +69,7 @@ void app_error(char *msg);
 
 /* Process control wrappers */
 pid_t Fork(void);
+void Execvp(const char * file, char * const argv[]);
 void Execve(const char *filename, char *const argv[], char *const envp[]);
 pid_t Wait(int *status);
 pid_t Waitpid(pid_t pid, int *iptr, int options);

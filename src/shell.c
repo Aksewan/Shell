@@ -9,119 +9,70 @@
 #define PIPESIZE 10
 
 
-////////////////////////////////////////////////////////////////////
-//Pour cd c'est une commande integrée au shell
-//Donc il faut changer le path
-//chdir()  remplace  le répertoire de travail courant du processus 
-//appelant par celui indiqué dans le chemin path.
-////////////////////////////////////////////////////////////////////
-
 void handler(){
 	pid_t pid;
 	while((pid=waitpid(-1,NULL,WNOHANG))>0){}
 	return;
 }
 
-//si en arrière plan, détache le processus du groupe???
-// -> voir si pas ajouter des cas d'erreurs à verif
-void execution_commande(struct cmdline *l) {	
-	pid_t pid;
-	Signal(SIGCHLD, handler);
-	int pipefd[PIPESIZE][2];
-	int pipenumber = 0;
+
+void execution_commande(struct cmdline *l) {
+    pid_t pid;
+    Signal(SIGCHLD, handler);
+    int pipefd[PIPESIZE][2];
+    int pipenumber = 0;
 	while(l->seq[pipenumber+1]!=0){ //Tant qu'on a des commandes à pipe
 		pipe(pipefd[pipenumber]); //On place le pipe associé aux commandes pipenumber et pipenumber+1 dans le tableau pipefd	
 		pipenumber+=1;
 	}
-	if(pipenumber>0){
-	for(int i=0; i<pipenumber; i++){
-		if(i==0){ // Premiere commande a effectuer 
-			for(int j=0; j<pipenumber; j++){
-				Close(pipefd[j][1]);
-				Close(pipefd[j][0]);
-			}
-			if(Fork() == 0){
+    for (int i = 0; i <= pipenumber; i++) {
+        pid = Fork(); 
+        if (pid == 0) { //Fils
+            if (i > 0) { //On ferme les descripteurs du pipe precedent et on redirige l'entrée standard
+                for(int j = 0; j<i-1; j++){
+					Close(pipefd[j][0]);
+					Close(pipefd[j][1]);
+				}
+				Dup2(pipefd[i - 1][0], 0);
+                Close(pipefd[i - 1][1]);
+            } 
+			else if (l->in) { //On redirige l'entrée standard
+                int fd_in = Open(l->in, O_RDONLY, S_IRUSR);
+                Dup2(fd_in, 0);
+                Close(fd_in);
+            }
 
-				if (l->in) {
-					int fd_in = Open(l->in, O_RDONLY, S_IRUSR);
-					Dup2(fd_in, STDIN_FILENO); //redirige l'entrée standard vers le fichier
-					Close(fd_in);
+            if (i < pipenumber) { //On redirige la sortie vers le pipe suivant et on ferme ses descripteurs
+                for(int j = i+1; j<pipenumber; j++){
+					Close(pipefd[j][0]);
+					Close(pipefd[j][1]);
 				}
-				for(int j=0; j<pipenumber; j++){
-					if(j==0){
-						Close(pipefd[j][0]);
-					}
-					else{
-						Close(pipefd[j][1]);
-						Close(pipefd[j][0]);
-					}
-					Dup2(pipefd[0][1], 1);
-					execvp(l->seq[0][0], l->seq[0]);
-					exit(1);
-				}
-			}
-		}
-		else{ //On est dans une commande entre la premiere et la derniere
-			if(Fork()==0){ // On est bien dans un processus fils 
-				for(int j=0; j<pipenumber; j++){ //On ouvre et ferme les entrées-sorties des pipes qui nous intéressent
-					if(j==i-1){
-						Close(pipefd[j][1]);
-					}
-					else if(j==i){ 
-						Close(pipefd[j][0]);
-					}
-					else{
-						Close(pipefd[j][0]);
-						Close(pipefd[j][1]);
-					}
-				}
-				Dup2(pipefd[i-1][0], 0);
 				Dup2(pipefd[i][1], 1);
-				execvp(l->seq[i][0], l->seq[i]);
-				exit(1);
-			}
+                Close(pipefd[i][0]);
+            } 
+			else if (l->out) { //On redirige la sortie standard
+                int fd_out = Open(l->out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR);
+                Dup2(fd_out, 1);
+                Close(fd_out);
+            }
+            Execvp(l->seq[i][0], l->seq[i]); //Gestion d'erreur dans csapp.c
+            exit(1);
+        }
+    }
+
+    //On ferme tous les descripteurs du père
+    for (int i = 0; i < pipenumber; i++) {
+        Close(pipefd[i][0]);
+        Close(pipefd[i][1]);
+    }
+
+	if(!l->background){ //si pas en arriere plan alors on attend
+		while(kill(pid, 0)==0){ //On attend que la seule ou la derniere commande s'effectue
+			sleep(1);
 		}
-	} //Il reste la derniere commande à effecuter
-	if((pid = Fork())==0){	
-		if (l->out) {
-			int fd_out = Open(l->out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR); 
-			Dup2(fd_out, STDOUT_FILENO); //redirige la sortie standard vers le fichier
-			Close(fd_out);
-		}
-		for(int j=0; j<pipenumber; j++){
-			if(j==pipenumber-1){
-				Close(pipefd[j][1]);
-			}
-			else{
-				Close(pipefd[j][0]);
-				Close(pipefd[j][1]);
-			}
-		}
-		Dup2(pipefd[pipenumber-1][1], 1);
-		execvp(l->seq[0][0], l->seq[0]);
-		exit(1);
-	}
-	}
-	else{
-		if((pid = Fork()) ==0){ 
-		if (l->out) {
-			int fd_out = Open(l->out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR); 
-			Dup2(fd_out, STDOUT_FILENO); //redirige la sortie standard vers le fichier
-			Close(fd_out);
-		}
-		if (l->in) {
-			int fd_in = Open(l->in, O_RDONLY, S_IRUSR);
-			Dup2(fd_in, STDIN_FILENO); //redirige l'entrée standard vers le fichier
-			Close(fd_in);
-		}
-		execvp(l->seq[0][0], l->seq[0]);
-		exit(1);
-	}
-	}
-	while(kill(pid, 0)==0){ //On attend que la seule ou la derniere commande s'effectue
-		sleep(1);
 	}
 }
+
 
 int main()
 {

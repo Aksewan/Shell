@@ -77,6 +77,11 @@ pid_t Fork(void)
 }
 /* $end forkwrapper */
 
+void Execvp(const char * file, char * const argv[]){
+    if (execvp(file, argv) < 0)
+    unix_error("Execvp error");
+}
+
 void Execve(const char *filename, char *const argv[], char *const envp[]) 
 {
     if (execve(filename, argv, envp) < 0)

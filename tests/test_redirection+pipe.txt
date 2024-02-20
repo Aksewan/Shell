@@ -1,0 +1,4 @@
+#
+# test_redirection+pipe.txt - Tester une commande avec une redirection et un seul pipe
+#
+cat < essai.txt | grep test

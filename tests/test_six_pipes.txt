@@ -1,0 +1,4 @@
+#
+# test_one_pipe.txt - Tester une commande avec 6 pipes (veillez a bien avoir le fichier titi.txt fourni avec le git)
+#
+cat titi.txt | cut -d : -f2 | sort | uniq -c | sort -rn | head -n 10

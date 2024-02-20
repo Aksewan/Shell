@@ -1,0 +1,10 @@
+total 96
+-rwxr-xr-x 1 barbarin ima-nogroup   484 févr. 15  2018 Makefile
+-rwx------ 1 barbarin ima-nogroup  5143 févr. 15  2018 sdriver.pl
+-rwxr-xr-x 1 barbarin ima-nogroup 70488 févr. 20 10:26 shell
+drwxr-xr-x 2 barbarin ima-nogroup  4096 févr. 15  2018 src
+-rw------- 1 barbarin ima-nogroup    55 févr. 20 08:54 test2.txt
+-rw------- 1 barbarin ima-nogroup     0 févr. 20 10:27 test_back.txt
+drwxr-xr-x 2 barbarin ima-nogroup  4096 févr. 15  2018 tests
+-rw------- 1 barbarin ima-nogroup    11 févr. 16 14:02 test.txt
+-rw------- 1 barbarin ima-nogroup    64 févr. 20 09:09 text.txt

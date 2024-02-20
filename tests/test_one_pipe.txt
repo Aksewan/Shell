@@ -1,0 +1,4 @@
+#
+# test_one_pipe.txt - Tester une commande avec une seul pipe
+#
+ls -l | wc -l

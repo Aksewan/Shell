@@ -1,0 +1,5 @@
+#
+# test_background.txt - Tester une commande en background
+#
+sleep 10 &
+ls

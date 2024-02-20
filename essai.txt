@@ -1,0 +1,6 @@
+-rw------- 1 barbarin ima-nogroup     0 févr. 20 14:21 essai.txt
+-rw------- 1 barbarin ima-nogroup    55 févr. 20 08:54 test2.txt
+-rw------- 1 barbarin ima-nogroup   591 févr. 20 10:27 test_back.txt
+-rw------- 1 barbarin ima-nogroup    11 févr. 16 14:02 test.txt
+-rw------- 1 barbarin ima-nogroup  2753 févr. 20 10:27 text.txt
+-rw-r--r-- 1 barbarin ima-nogroup   695 févr. 20 13:49 titi.txt
