@@ -17,7 +17,9 @@ void handler(){
 
 
 void execution_commande(struct cmdline *l) {
+	int status;
     pid_t pid;
+	pid_t pid_tab[PIPESIZE+1]; //On a toujours une commande de plus que de pipe
     Signal(SIGCHLD, handler);
     int pipefd[PIPESIZE][2];
     int pipenumber = 0;
@@ -27,6 +29,7 @@ void execution_commande(struct cmdline *l) {
 	}
     for (int i = 0; i <= pipenumber; i++) {
         pid = Fork(); 
+		pid_tab[i] = pid;
         if (pid == 0) { //Fils
             if (i > 0) { //On ferme les descripteurs du pipe precedent et on redirige l'entrée standard
                 for(int j = 0; j<i-1; j++){
@@ -59,17 +62,13 @@ void execution_commande(struct cmdline *l) {
             exit(1);
         }
     }
-
     //On ferme tous les descripteurs du père
     for (int i = 0; i < pipenumber; i++) {
         Close(pipefd[i][0]);
         Close(pipefd[i][1]);
     }
-
-	if(!l->background){ //si pas en arriere plan alors on attend
-		while(kill(pid, 0)==0){ //On attend que la seule ou la derniere commande s'effectue
-			sleep(1);
-		}
+	for(int i=0; i<=pipenumber; i++){
+		if(waitpid(pid_tab[i], &status,0) || pid_tab[i]==-1){} //pid_tab est a 0 si le pid associé est en background
 	}
 }
 
