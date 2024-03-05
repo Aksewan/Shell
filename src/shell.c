@@ -67,12 +67,9 @@ void execution_commande(struct cmdline *l) {
         Close(pipefd[i][0]);
         Close(pipefd[i][1]);
     }
-	for(int i=0; i<=pipenumber; i++){
-		if(waitpid(pid_tab[i], &status,0) || pid_tab[i]==-1){} //pid_tab est a 0 si le pid associé est en background
-	}
 	if(!l->background){
-		while(kill(pid, 0) ==0){
-			sleep(1);
+		for(int i=0; i<=pipenumber; i++){
+			if(waitpid(pid_tab[i], &status,0) || pid_tab[i]==-1){} //pid_tab est a 0 si le pid associé est en background
 		}
 	}
 }
